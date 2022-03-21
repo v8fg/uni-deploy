@@ -30,10 +30,12 @@ app_command=$1
 
 function help_info() {
     echo "Available command options:"
-    echo " install      [path]                      - install uni-deploy, shall to your project root dir"
+    echo " install      [path]                      - install uni-deploy, shall into your project root dir"
+    echo " uninstall    [path]                      - uninstall uni-deploy, pls watch your path, shall execute in project root dir"
     echo " status       [path]                      - uni-deploy module status"
-    echo " update       [path]                      - uni-deploy module update"
-    echo " uninstall    [path]                      - uninstall uni-deploy, pls watch your path, shall specify"
+    echo " diff         [path]                      - uni-deploy module diff"
+    echo " update       [path]                      - uni-deploy module update --remote"
+    echo " sync         [path]                      - uni-deploy module sync and init"
     echo " help                                     - displays the help"
     echo " [command]                                - Execute the specified command, eg. bash commands."
     echo -e "\033[31mAvailable params options\033[0m"
@@ -77,6 +79,15 @@ function install() {
     git submodule --quiet add --force -b "${_uni_deploy_branch}" ${uni_deploy_repo} ${uni_deploy_path_name}
 }
 
+function uninstall() {
+    init_dir "$1"
+
+    cd "${_uni_deploy_path}" && git submodule deinit -f ${uni_deploy_path_name} 
+    cd "${_uni_deploy_path}" && rm -rf .git/modules/${uni_deploy_path_name}
+    cd "${_uni_deploy_path}" && git rm -f ${uni_deploy_path_name}
+    # git commit -am "remove the submodule ${uni_deploy_path_name}"
+}
+
 function status() {
     init_dir "$1"
 
@@ -84,33 +95,33 @@ function status() {
     git submodule --quiet status ${uni_deploy_path_name}
 }
 
+
+function diff() {
+    init_dir "$1"
+
+    cd "${_uni_deploy_path}" && \
+    git diff --submodule  ${uni_deploy_path_name}
+}
+
+
 function update() {
     init_dir "$1"
 
     cd "${_uni_deploy_path}" && \
-    git submodule --quiet update ${uni_deploy_path_name}
+    git submodule update --remote --rebase ${uni_deploy_path_name}
 }
 
 function sync() {
     init_dir "$1"
 
     cd "${_uni_deploy_path}" && \
-    git submodule --quiet sync ${uni_deploy_path_name}
-}
-
-function uninstall() {
-    init_dir "$1"
-
-    cd "${_uni_deploy_path}" && \
-    git submodule deinit -f ${uni_deploy_path_name} && git rm -f ${uni_deploy_path_name}
-    
-    cd "${_uni_deploy_path}" && rm -rf .git/modules/${uni_deploy_path_name}
-    # git commit -am "remove the submodule ${uni_deploy_path_name}"
+    git submodule sync --recursive ${uni_deploy_path_name}
+    git submodule update --init --recursive ${uni_deploy_path_name}
 }
 
 
 case ${app_command} in
-    install|status|update|uninstall)
+    install|uninstall|status|diff|update|sync)
     case ${app_command} in
         install)
             shift 1
@@ -118,10 +129,22 @@ case ${app_command} in
             _info="exec install: install ${uni_deploy_path_name} done at:$(date "+%FT%T%z")"
             echo -e "\033[34m${_info}\033[0m"
         ;;
+        uninstall)
+            shift 1
+            uninstall "$@"
+            _info="exec uninstall: remove ${uni_deploy_path_name} done at:$(date "+%FT%T%z")"
+            echo -e "\033[34m${_info}\033[0m"
+        ;;
         status)
             shift 1
             status "$@"
             _info="exec status: status ${uni_deploy_path_name} done at:$(date "+%FT%T%z")"
+            echo -e "\033[34m${_info}\033[0m"
+        ;;
+        diff)
+            shift 1
+            status "$@"
+            _info="exec diff: diff ${uni_deploy_path_name} done at:$(date "+%FT%T%z")"
             echo -e "\033[34m${_info}\033[0m"
         ;;
         update)
@@ -134,12 +157,6 @@ case ${app_command} in
             shift 1
             sync "$@"
             _info="exec sync: sync ${uni_deploy_path_name} done at:$(date "+%FT%T%z")"
-            echo -e "\033[34m${_info}\033[0m"
-        ;;
-        uninstall)
-            shift 1
-            uninstall "$@"
-            _info="exec uninstall: remove ${uni_deploy_path_name} done at:$(date "+%FT%T%z")"
             echo -e "\033[34m${_info}\033[0m"
         ;;
     esac
