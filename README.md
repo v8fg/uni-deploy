@@ -2,6 +2,11 @@
 
 Makefile and scripts for simply and uni dev-ops, current include go, docker
 
+## feature
+
+- [x] go
+- [ ] docker
+
 ## requirements
 
 >**choose needed to install**
@@ -37,3 +42,9 @@ Makefile and scripts for simply and uni dev-ops, current include go, docker
 - `bash make.sh`
 
 >more usage: `bash make.sh help`
+
+## uninstall uni-deploy
+
+- `bash uni-deploy/make.sh uninstall`
+  - pls exec in your project root dir
+  - or specify the project root dir

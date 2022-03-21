@@ -15,7 +15,7 @@ readonly uni_deploy_repo uni_deploy_branch uni_deploy_path uni_deploy_path_name
 function install() {
     cd "${uni_deploy_path}" && \
     git submodule --quiet add --force -b ${uni_deploy_branch} ${uni_deploy_repo} ${uni_deploy_path_name}
-    echo -e "\033[31minstall submodule repo:${uni_deploy_repo}, branch=${uni_deploy_branch} success\033[0m"
+    echo -e "\033[32minstall submodule repo[${uni_deploy_repo}], branch[${uni_deploy_branch}], path[${uni_deploy_path_name}] success\033[0m"
 }
 
 install "${uni_deploy_path}"
