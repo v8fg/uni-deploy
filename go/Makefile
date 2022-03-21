@@ -257,12 +257,14 @@ race:
 ## build:	go build with tags and ldflags, mainly for dev
 build: go-clean
 	@echo -e "${COLOR_INFO}"
+	@cd ${PROJECT_ROOT} && \
 	go build -v -tags ${buildTags} -ldflags ${ldFlagsDebug} -o ${binary_file} ${PROJECT_ROOT}
 	@echo -e "[command-build]	${GREEN}build output binary: ${binary_file}"
 
 ## build-darwin:	cross-platform build use, issues with tensorflow, shall support dynamic cgo, goos, goarch setting
 build-darwin:
 	@echo -e "${COLOR_INFO}"
+	@cd ${PROJECT_ROOT} && \
 	export CGO_ENABLED=0 && export GOOS=darwin && export GOARCH=amd64 && \
 	go build -v -tags ${buildTags} -ldflags ${ldFlagsRelease} -o ${binary_file}-darwin ${PROJECT_ROOT}
 	@echo -e "[command-build-darwin]	${GREEN}build output binary: ${binary_file}-darwin"
@@ -270,6 +272,7 @@ build-darwin:
 ## build-linux:	cross-platform build use, issues with tensorflow, shall support dynamic cgo, goos, goarch setting
 build-linux:
 	@echo -e "${COLOR_INFO}"
+	@cd ${PROJECT_ROOT} && \
 	export CGO_ENABLED=0 && export GOOS=linux && export GOARCH=amd64 && \
 	go build -v -tags ${buildTags} -ldflags ${ldFlagsRelease} -o ${binary_file}-linux ${PROJECT_ROOT}
 	@echo -e "[command-build-linux]	${GREEN}build output binary: ${binary_file}-linux"
@@ -277,13 +280,14 @@ build-linux:
 ## release:	release binary, build with go mod
 release:
 	@echo -e "${COLOR_INFO}"
+	@cd ${PROJECT_ROOT} && \
 	go build -v -mod=mod -tags ${buildTags} -ldflags ${ldFlagsRelease} -o ${binary_file} ${PROJECT_ROOT}
 	@echo -e "[command-release]	${GREEN}build output binary: ${binary_file}"
 
 ## release-vendor:	release binary, build with go vendor
 release-vendor:
 	@echo -e "${COLOR_INFO}"
-	go mod vendor && \
+	@cd ${PROJECT_ROOT} && go mod vendor && \
 	go build -v -mod=vendor -tags ${buildTags} -ldflags ${ldFlagsRelease} -o ${binary_file} ${PROJECT_ROOT}
 	@echo -e "[command-release-vendor]	${GREEN}build output binary: ${binary_file}"
 
