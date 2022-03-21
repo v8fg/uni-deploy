@@ -25,6 +25,7 @@ endif
 $(info [init]	shell will use '${SHELL}' (bash preffered, support 5.0+))
 
 # some default inner params
+_current_script_dir=$(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 _default_project_root=$(realpath $(dir $(realpath $(lastword $(MAKEFILE_LIST))))../..)
 _default_binary_name=uni_deploy_app
 _default_build_dir_out=${_default_project_root}/build
@@ -100,11 +101,11 @@ $(info [init]	output: [conf   output=${build_dir_out_conf}])
 endif
 
 # ----------- go pkg and files -----------
-PACKAGES=$(shell go list ${PROJECT_ROOT}/... | grep -v /vendor/)
-VET_PACKAGES=$(shell go list ${PROJECT_ROOT}/... | grep -v /vendor/ | grep -v /examples/)
-GO_FILES=$(shell find ${PROJECT_ROOT} -name "*.go" -type f -not -path "${PROJECT_ROOT}/vendor/*")
-#GO_FILES=$(shell find ${PROJECT_ROOT} -name "*.go" | grep -v "${PROJECT_ROOT}/vendor/")
-#GO_FILES=$(shell find ${PROJECT_ROOT} -name "*.go" -type f -not -path "${PROJECT_ROOT}/vendor/*" | grep -v _test.go)
+PACKAGES=$(shell cd ${PROJECT_ROOT} && go list ./... | grep -v /vendor/)
+VET_PACKAGES=$(shell cd ${PROJECT_ROOT} && go list ./... | grep -v /vendor/ | grep -v /examples/)
+GO_FILES=$(shell cd ${PROJECT_ROOT} && find . -name "*.go" -type f -not -path "./vendor/*")
+# GO_FILES=$(shell cd ${PROJECT_ROOT} && find . -name "*.go" | grep -v "./vendor/")
+# GO_FILES=$(shell cd ${PROJECT_ROOT} && find . -name "*.go" -type f -not -path "./vendor/*" | grep -v _test.go)
 
 # ----------- build version params with git -----------
 # add following lines before go build!
@@ -128,12 +129,12 @@ endif
 # tip: if need debug or catch trace detail, shall not remove that
 
 ldFlagsDebug="-X ${versionDir}.gitBranch=${gitBranch} -X ${versionDir}.gitTag=${gitTag} \
- -X ${versionDir}.buildTime=${buildTime} -X ${versionDir}.gitCommit=${gitCommit} \
- -X ${versionDir}.gitTreeState=${gitTreeState}"
+-X ${versionDir}.buildTime=${buildTime} -X ${versionDir}.gitCommit=${gitCommit} \
+-X ${versionDir}.gitTreeState=${gitTreeState}"
 
 ldFlagsRelease="-s -w -X ${versionDir}.gitBranch=${gitBranch} -X ${versionDir}.gitTag=${gitTag} \
-  -X ${versionDir}.buildTime=${buildTime} -X ${versionDir}.gitCommit=${gitCommit} \
-  -X ${versionDir}.gitTreeState=${gitTreeState}"
+-X ${versionDir}.buildTime=${buildTime} -X ${versionDir}.gitCommit=${gitCommit} \
+-X ${versionDir}.gitTreeState=${gitTreeState}"
 
 # ----------- build version params with go tags -----------
 buildTags="jsoniter"
@@ -162,12 +163,13 @@ env:
 ## vet:	vet check, more pls ref, go help vet
 vet:
 	@echo -e "[command-vet]	${RED}executing vet${COLOR_RESET}"
-	@cd ${PROJECT_ROOT} && go vet $(VET_PACKAGES)/...
+	@cd ${PROJECT_ROOT} && go vet $(VET_PACKAGES)
 	@echo -e "[command-vet]	${GREEN}execute success${COLOR_RESET}"
 
-## lint:	go lint
+## lint:	golangci lint, now incompatible with go1.18
 lint:
-	@golangci-lint run --enable-all ${PROJECT_ROOT}/...
+	@cd ${PROJECT_ROOT} && golangci-lint cache clean && \
+	golangci-lint run -c ${_current_script_dir}/golangci.yml ./...
 	@echo -e "[command-lint]	${GREEN}execute success${COLOR_RESET}"
 
 ## list:	list all your packages, vet packages, go files
@@ -200,30 +202,30 @@ go-version:
 
 ## fmt:	format the go files with gofmt
 fmt:
-	@gofmt -s -w ${GO_FILES}
+	@cd ${PROJECT_ROOT} && gofmt -s -w ${GO_FILES}
 	@echo -e "[command-fmt]	${GREEN}execute success${COLOR_RESET}"
 
-## fmt-check-files:	check whether or not shall format the go files
+## fmt-check:	check whether or not shall format the go files
 fmt-check:
-	@diffs=$$(gofmt -l ${GO_FILES}); \
+	@cd ${PROJECT_ROOT} && diffs=$$(gofmt -l ${GO_FILES}); \
 	if [[ -n "$$diffs" ]]; then \
 		echo -e "${RED}Pls run 'make fmt' and commit the result:${COLOR_RESET}"; \
 		echo -e "[command-fmt-check]	${PURPLE}gofmt diff files:${COLOR_RESET}\n${BLUE}$${diffs}${COLOR_RESET}"; \
 		echo -e "${RED}Pls run 'make fmt' and commit the result:${COLOR_RESET}"; \
 		exit 1; \
     else	\
-	  	echo -e "[command-fmt-check]	${GREEN}gofmt no diff files${COLOR_RESET}"; \
-  		exit 0; \
+		echo -e "[command-fmt-check]	${GREEN}gofmt no diff files${COLOR_RESET}"; \
+		exit 0; \
     fi; \
 
 ## fmt-check-files:	check the diff files with gofmt
 fmt-check-files:
-	@gofmt -l ${GO_FILES}
+	@cd ${PROJECT_ROOT} && gofmt -l ${GO_FILES}
 	@echo -e "[command-fmt-check-files]	${GREEN}execute success${COLOR_RESET}"
 
 ## fmt-check-changes:	check the diffs of files with gofmt
 fmt-check-changes:
-	@gofmt -d -s ${GO_FILES}
+	@cd ${PROJECT_ROOT} && gofmt -d -s ${GO_FILES}
 	@echo -e "[command-fmt-check-changes] ${GREEN}execute success${COLOR_RESET}"
 
 ## test:	go test
@@ -265,7 +267,7 @@ build: go-clean
 build-darwin:
 	@echo -e "${COLOR_INFO}"
 	@cd ${PROJECT_ROOT} && \
-	export CGO_ENABLED=0 && export GOOS=darwin && export GOARCH=amd64 && \
+	export CGO_ENABLED=${CGO_ENABLED} && export GOOS=darwin && export GOARCH=amd64 && \
 	go build -v -tags ${buildTags} -ldflags ${ldFlagsRelease} -o ${binary_file}-darwin ${PROJECT_ROOT}
 	@echo -e "[command-build-darwin]	${GREEN}build output binary: ${binary_file}-darwin"
 
@@ -273,7 +275,7 @@ build-darwin:
 build-linux:
 	@echo -e "${COLOR_INFO}"
 	@cd ${PROJECT_ROOT} && \
-	export CGO_ENABLED=0 && export GOOS=linux && export GOARCH=amd64 && \
+	export CGO_ENABLED=${CGO_ENABLED} && export GOOS=linux && export GOARCH=amd64 && \
 	go build -v -tags ${buildTags} -ldflags ${ldFlagsRelease} -o ${binary_file}-linux ${PROJECT_ROOT}
 	@echo -e "[command-build-linux]	${GREEN}build output binary: ${binary_file}-linux"
 

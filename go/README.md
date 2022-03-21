@@ -13,3 +13,4 @@
 ## links
 
 - [go link](https://pkg.go.dev/cmd/link)
+- [golangci-lint](https://golangci-lint.run)
