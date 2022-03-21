@@ -12,4 +12,26 @@
 *.out
 
 # Dependency directories (remove the comment below to include it)
-# vendor/
+vendor/
+.DS_Store
+*.nohup.out
+
+# ignore the vscode temp files
+*.inp
+*.oac
+
+.vscode/
+.glide/
+.idea/
+!.gitkeep
+
+*.log
+# binary
+*.zip
+
+*.temp
+*.tmp
+uni_deploy_app
+
+build/
+dist/
