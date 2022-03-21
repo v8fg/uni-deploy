@@ -31,20 +31,21 @@ Makefile and scripts for simply and uni dev-ops, current include go, docker
 
 >quick install, only support standard project root dir, by `install.sh`, default branch `release`
 
-- `curl -s -L https://raw.githubusercontent.com/v8fg/uni-deploy/release/installer.sh | bash`
-- `wget -qO- https://raw.githubusercontent.com/v8fg/uni-deploy/release/installer.sh | bash`
+- `curl -sSfL https://raw.githubusercontent.com/v8fg/uni-deploy/release/install.sh | bash`
+- `wget -O- -nv https://raw.githubusercontent.com/v8fg/uni-deploy/release/install.sh | bash`
+- `wget -qO-  https://raw.githubusercontent.com/v8fg/uni-deploy/release/install.sh | bash`
 
 ## standard install and other ops
 
 >**better clone into your project root dir**
 
 - `git clone https://github.com/v8fg/uni-deploy.git -b <branch> [path]`
-- `bash make.sh`
+- `bash all.sh`
 
->more usage: `bash make.sh help`
+>more usage: `bash all.sh help`
 
 ## uninstall uni-deploy
 
-- `bash uni-deploy/make.sh uninstall`
+- `bash uni-deploy/all.sh uninstall`
   - pls exec in your project root dir
   - or specify the project root dir
