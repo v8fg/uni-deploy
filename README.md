@@ -29,11 +29,20 @@ Makefile and scripts for simply and uni dev-ops, current include go, docker
 
 ## quick install
 
->quick install, only support standard project root dir, by `install.sh`, default branch `release`
+You can easily install by `install.sh`, **but** only support into the `root dir for your project`, default branch `release`.
+
+>`release`
 
 - `curl -sSfL https://raw.githubusercontent.com/v8fg/uni-deploy/release/install.sh | bash`
 - `wget -O- -nv https://raw.githubusercontent.com/v8fg/uni-deploy/release/install.sh | bash`
 - `wget -qO-  https://raw.githubusercontent.com/v8fg/uni-deploy/release/install.sh | bash`
+
+>`specify branch: [release, main, dev]`
+
+- `curl -sSfL https://raw.githubusercontent.com/v8fg/uni-deploy/release/install.sh | bash -s dev`
+- `wget -O- -nv https://raw.githubusercontent.com/v8fg/uni-deploy/release/install.sh | bash -s dev`
+- `base < (curl -sSfL https://raw.githubusercontent.com/v8fg/uni-deploy/release/install.sh) dev`
+- `base < (wget -O- -nv https://raw.githubusercontent.com/v8fg/uni-deploy/release/install.sh) dev`
 
 ## standard install and other ops
 
@@ -47,5 +56,4 @@ Makefile and scripts for simply and uni dev-ops, current include go, docker
 ## uninstall uni-deploy
 
 - `bash uni-deploy/all.sh uninstall`
-  - pls exec in your project root dir
-  - or specify the project root dir
+  - the submodule `uni-deploy` **must in the root dir for your project**
