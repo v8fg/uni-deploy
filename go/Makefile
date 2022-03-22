@@ -91,9 +91,26 @@ build_dir_out_coverage=${BUILD_DIR_OUT}/coverage
 # generate all dirs will be used
 $(shell mkdir -p ${build_dir_out_conf} ${build_dir_out_binary} ${build_dir_out_coverage})
 
+_git_version=$(shell if [ -x $(command -v git) ]; then git --version | sed -rn "s/([^0-9]*)([0-9\.]+)([^0-9]*.*)/\2/ p"; fi)
+_go_version=$(shell if [ -x $(command -v go) ]; then go version | sed -rn "s/([^0-9]*)([0-9\.]+)([^0-9]*.*)/\2/ p"; fi)
+
+# is git project
+_is_git_project=$(shell git rev-parse --is-inside-work-tree)
+
+ifeq (true,$(strip ${_is_git_project}))
+	gitCommit=$(shell cd ${PROJECT_ROOT} && git rev-parse HEAD)
+	gitCommitShort=$(shell cd ${PROJECT_ROOT} && git rev-parse --short HEAD)
+	gitTreeState=$(shell cd ${PROJECT_ROOT} && (if git status|grep -q 'clean';then echo clean; else echo dirty; fi))
+	gitBranch=$(shell cd ${PROJECT_ROOT} && git symbolic-ref --short -q HEAD)
+	ifeq (,$(strip $(gitBranch)))
+		gitTag=$(shell cd ${PROJECT_ROOT} && git describe --always --tags --abbrev=0)
+	endif
+endif
+
 # only if SHOW_TIP=false, disable init info
 ifneq (false,${SHOW_TIP})
-$(info [init]	env:   	[go_verion=$(shell go version), CGO_ENABLED=${CGO_ENABLED}])
+$(info [init]	vcs:   	[git=${_git_version}, commit_short=${gitCommitShort}, commit=${gitCommit}])
+$(info [init]	env:   	[go_verion=${_go_version}, CGO_ENABLED=${CGO_ENABLED}])
 $(info [init]	base:   [binary_name=${BINARY_NAME}, project_root=${PROJECT_ROOT}])
 $(info [init]	output: [build_out_dir=${BUILD_DIR_OUT}])
 $(info [init]	output: [binary output=${binary_file})
@@ -110,16 +127,7 @@ GO_FILES=$(shell cd ${PROJECT_ROOT} && find . -name "*.go" -type f -not -path ".
 # ----------- build version params with git -----------
 # add following lines before go build!
 versionDir = github.com/xwi88/version
-
 buildTime = $(shell date "+%FT%T%z")
-gitCommit = $(shell cd ${PROJECT_ROOT} && git rev-parse HEAD)
-gitCommitShort = $(shell cd ${PROJECT_ROOT} && git rev-parse --short HEAD)
-gitTreeState = $(shell cd ${PROJECT_ROOT} && (if git status|grep -q 'clean';then echo clean; else echo dirty; fi))
-gitBranch = $(shell cd ${PROJECT_ROOT} && git symbolic-ref --short -q HEAD)
-
-ifeq (,$(strip $(gitBranch)))
-	gitTag = $(shell cd ${PROJECT_ROOT} && git describe --always --tags --abbrev=0)
-endif
 
 # ----------- build version params with go ldflags -----------
 # ldflags: stands for linker flags. It passes a flag to the underlying Go toolchain linker, cmd/link, that allows you to change the values of imported packages at build time from the command line.

@@ -1,0 +1,26 @@
+## .dockerignore file maybe affect the Dockfile exec
+## start with # or not # will be ignore
+## start with ! will not ignore
+
+## must not ignore .git, as Makefile need .git
+##.git
+## vendor
+
+.gitignore
+LICENSE
+README.md
+docs
+docker-compose.yml
+docker/data
+
+.vscode
+.idea
+log
+dist
+
+!dist/conf
+!dist/entrypoint.sh
+
+bak_conf
+profiles
+build
