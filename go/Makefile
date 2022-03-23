@@ -91,11 +91,11 @@ build_dir_out_coverage=${BUILD_DIR_OUT}/coverage
 # generate all dirs will be used
 $(shell mkdir -p ${build_dir_out_conf} ${build_dir_out_binary} ${build_dir_out_coverage})
 
-_git_version=$(shell if [ -x $(command -v git) ]; then git --version | sed -rn "s/([^0-9]*)([0-9\.]+)([^0-9]*.*)/\2/ p"; fi)
-_go_version=$(shell if [ -x $(command -v go) ]; then go version | sed -rn "s/([^0-9]*)([0-9\.]+)([^0-9]*.*)/\2/ p"; fi)
+_git_version=$(shell if [ -x $(command -v git) ]; then git --version | sed -En "s/([^0-9]*)([0-9\.]+)([^0-9]*.*)/\2/ p"; fi)
+_go_version=$(shell if [ -x $(command -v go) ]; then go version | sed -En "s/([^0-9]*)([0-9\.]+)([^0-9]*.*)/\2/ p"; fi)
 
 # is git project
-_is_git_project=$(shell git rev-parse --is-inside-work-tree)
+_is_git_project=$(shell cd ${PROJECT_ROOT}; if [ -d "./.git" ]; then git rev-parse --is-inside-work-tree; else echo "false"; fi)
 
 ifeq (true,$(strip ${_is_git_project}))
 	gitCommit=$(shell cd ${PROJECT_ROOT} && git rev-parse HEAD)
@@ -109,12 +109,12 @@ endif
 
 # only if SHOW_TIP=false, disable init info
 ifneq (false,${SHOW_TIP})
-$(info [init]	vcs:   	[git=${_git_version}, commit_short=${gitCommitShort}, commit=${gitCommit}])
+$(info [init]	base:   [project_root=${PROJECT_ROOT}])
+$(info [init]	vcs:   	[git=${_git_version}, commit_short=${gitCommitShort}, commit=${gitCommit}, inside_work_tree=${_is_git_project}])
 $(info [init]	env:   	[go_verion=${_go_version}, CGO_ENABLED=${CGO_ENABLED}])
-$(info [init]	base:   [binary_name=${BINARY_NAME}, project_root=${PROJECT_ROOT}])
 $(info [init]	output: [build_out_dir=${BUILD_DIR_OUT}])
-$(info [init]	output: [binary output=${binary_file})
-$(info [init]	output: [conf   output=${build_dir_out_conf}])
+$(info [init]	output: [binary_name=${BINARY_NAME}, binary_output=${binary_file})
+$(info [init]	output: [conf_output=${build_dir_out_conf}])
 endif
 
 # ----------- go pkg and files -----------

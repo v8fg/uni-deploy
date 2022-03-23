@@ -105,16 +105,16 @@ endif
 # full image name: rerpository:tag
 build_image_repository_name=${REPOSITORY}:${TAG}
 
-_git_version=$(shell if [ -x $(command -v git) ]; then git --version | sed -rn "s/([^0-9]*)([0-9\.]+)([^0-9]*.*)/\2/ p"; fi)
-_docker_version=$(shell if [ -x $(command -v docker) ]; then docker --version | sed -rn "s/([^0-9]*)([0-9\.]+)([^0-9]*.*)/\2/ p"; fi)
-_compose_version=$(shell if [ -x $(command -v docker-compose) ]; then docker-compose --version | sed -rn "s/([^0-9]*)([0-9\.]+)([^0-9]*.*)/\2/ p"; fi)
+_git_version=$(shell if [ -x $(command -v git) ]; then git --version | sed -En "s/([^0-9]*)([0-9\.]+)([^0-9]*.*)/\2/ p"; fi)
+_docker_version=$(shell if [ -x $(command -v docker) ]; then docker --version | sed -En "s/([^0-9]*)([0-9\.]+)([^0-9]*.*)/\2/ p"; fi)
+_compose_version=$(shell if [ -x $(command -v docker-compose) ]; then docker-compose --version | sed -En "s/([^0-9]*)([0-9\.]+)([^0-9]*.*)/\2/ p"; fi)
 
 gitCommit=
 gitCommitShort=
 buildTime = $(shell date "+%FT%T%z")
 
 # is git project
-_is_git_project=$(shell cd ${PROJECT_ROOT} && git rev-parse --is-inside-work-tree)
+_is_git_project=$(shell cd ${PROJECT_ROOT}; if [ -d "./.git" ]; then git rev-parse --is-inside-work-tree; else echo "false"; fi)
 
 ifeq (true,$(strip ${_is_git_project}))
 	gitCommit=$(shell cd ${PROJECT_ROOT} && git rev-parse HEAD)
@@ -123,9 +123,9 @@ endif
 
 # only if SHOW_TIP=false, disable init info
 ifneq (false,${SHOW_TIP})
-$(info [init]	vcs:   	[git=${_git_version}, commit_short=${gitCommitShort}, commit=${gitCommit}])
-$(info [init]	env:   	[docker=${_docker_version}, compose=${_compose_version}])
 $(info [init]	base:   [project_root=${PROJECT_ROOT}])
+$(info [init]	vcs:   	[git=${_git_version}, commit_short=${gitCommitShort}, commit=${gitCommit}, inside_work_tree=${_is_git_project}])
+$(info [init]	env:   	[docker=${_docker_version}, compose=${_compose_version}])
 $(info [init]	base:   [ docker_file=${DOCKER_FILE}])
 $(info [init]	base:   [compose_file=${DOCKER_COMPOSE_FILE}])
 endif
