@@ -2,6 +2,10 @@
 # This Makefile doesn't consider Windows Environment. If you use it in Windows, please be careful.
 SHELL := /bin/sh
 
+define NEWLINE
+
+endef
+
 # -------- color constant start -------
 RED=\033[31;01m
 GREEN=\033[32;01m
@@ -36,7 +40,7 @@ CGO_ENABLED?=0
 
 # The params will be override if specified by input
 # SHOW_TIP whether or not show the init info
-SHOW_TIP?=true
+SHOW_TIP?=false
 
 # PROJECT_ROOT the project root dir
 PROJECT_ROOT?=${_default_project_root}
@@ -115,6 +119,7 @@ $(info [init]	env:   	[go_verion=${_go_version}, CGO_ENABLED=${CGO_ENABLED}])
 $(info [init]	output: [build_out_dir=${BUILD_DIR_OUT}])
 $(info [init]	output: [binary_name=${BINARY_NAME}, binary_output=${binary_file})
 $(info [init]	output: [conf_output=${build_dir_out_conf}])
+$(info ${NEWLINE})
 endif
 
 # ----------- go pkg and files -----------
@@ -364,7 +369,7 @@ clean-binary:
 ## clean-conf:	only clean the build conf
 clean-conf:
 	@cd ${BUILD_DIR_OUT} && \
-	if [ -f ${build_dir_out_conf} ] ; then rm ${build_dir_out_conf} ; fi
+	if [ -d ${build_dir_out_conf} ] ; then rm ${build_dir_out_conf} ; fi
 	@echo -e "[command-clean-conf]	${GREEN}clean ${build_dir_out_conf} success"
 
 ## version:	print the binary app version, need third pkg

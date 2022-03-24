@@ -2,6 +2,10 @@
 # This Makefile doesn't consider Windows Environment. If you use it in Windows, please be careful.
 SHELL := /bin/sh
 
+define NEWLINE
+
+endef
+
 # -------- color constant start -------
 RED=\033[31;01m
 GREEN=\033[32;01m
@@ -38,7 +42,8 @@ _compose_version=""
 
 # The params will be override if specified by input
 # SHOW_TIP whether or not show the init info
-SHOW_TIP?=true
+SHOW_TIP?=false
+override CURRENT_SCRIPT_DIR=${_current_script_dir}
 
 # PROJECT_ROOT the project root dir
 PROJECT_ROOT?=${_default_project_root}
@@ -52,8 +57,28 @@ REGISTRY_PASSWORD?=
 REPOSITORY?=${_default_repository}
 TAG?=${_default_tag}
 
+# image id
 IMAGE_ID?=
+# container id
 CONTAINER_ID?=
+# display logs count, default 200
+LOGS_COUNT?=200
+
+# for image list filter, format: -f reference=""
+IMAGE_LIST_PARAMS?=-f reference=""
+
+CONTAINER_LIST_PARAMS?=
+
+COMPOSE_RUN_PARAMS?="-d"
+
+# for run container, the image(name or id) use
+CONTAINER_IMAGE?=${REPOSITORY}:${TAG}
+# for run container, container name, format: --name <container_name>
+CONTAINER_NAME_PARAM?=
+# for run container, format like: -d daemon -v v1:v1 ... -p p1:p2 ... -e k1=v1 ...
+CONTAINER_PARAMS?=
+# for run container, params for app need, container CMD need
+CONTAINER_CMD_PARAMS?=
 
 # check or override: SHOW_TIP
 ifeq (,$(strip ${SHOW_TIP}))
@@ -128,14 +153,16 @@ $(info [init]	vcs:   	[git=${_git_version}, commit_short=${gitCommitShort}, comm
 $(info [init]	env:   	[docker=${_docker_version}, compose=${_compose_version}])
 $(info [init]	base:   [ docker_file=${DOCKER_FILE}])
 $(info [init]	base:   [compose_file=${DOCKER_COMPOSE_FILE}])
+$(info ${NEWLINE})
 endif
 
 
 # ----------- Makefile commands -----------
 .PHONY: default help env cp-ignore \
-	login login-auth build tag push list-image run run-daemon stop list-docker \
-	rmi image-prune rm docker-prune compose-run compose-daemon compose-stop
-	prune remove
+	login login-auth build tag push list-image list-docker\
+	run stop \
+	rmi image-prune rm docker-prune compose-run compose-stop \
+	logs
 
 default: help
 
@@ -150,6 +177,11 @@ env:
 	@echo -e "${COLOR_INFO}$(shell docker-compose --version)${COLOR_RESET}"
 	@echo -e "[command-env]	${GREEN}execute success${COLOR_RESET}"
 
+## cp-ignore:	copy the default '.dockerignore' file to the root dir of your project, pls rename it manually
+cp-ignore:
+	cp ${CURRENT_SCRIPT_DIR}/.dockerignore-example ${PROJECT_ROOT}
+	@echo -e "[command-cp-ignore]	${GREEN}execute success${COLOR_RESET}"
+
 ## login:	login docker-hub
 login:
 	docker login
@@ -159,3 +191,77 @@ login:
 login-auth:
 	docker login -u "${REGISTRY_ACCOUNT}" "${REGISTRY}" -p "${REGISTRY_PASSWORD}"
 	@echo -e "[command-login-auth]	${GREEN}execute success${COLOR_RESET}"
+
+## build:	docker build with REPOSITORY(default your dir name) and TAG(default latest)
+build:
+	@echo -e "building image with name:[${REPOSITORY}:${TAG}], use Dockerfile:${DOCKER_FILE}"
+	@cd ${PROJECT_ROOT} && docker build -t ${REPOSITORY}:${TAG} -f ${DOCKER_FILE} .
+	@echo -e "build image with name:[${REPOSITORY}:${TAG}], use Dockerfile:${DOCKER_FILE}"
+	@echo -e "[command-build]	${GREEN}execute success${COLOR_RESET}"
+
+## tag:	docker tag, only support rename tag by image id
+tag:
+	@docker tag ${IMAGE_ID} ${REPOSITORY}:${TAG}
+	@echo -e "[command-tag]	${GREEN}image with ID [${IMAGE_ID}], rename to [${REPOSITORY}:${TAG}${COLOR_RESET}]"
+	@echo -e "[command-tag]	${GREEN}execute success${COLOR_RESET}"
+
+## push:	push docker images to docker hub or others. shall login before push!
+push:
+	docker push ${REPOSITORY}:${TAG}
+	@echo -e "[command-push]	${GREEN}push ${REPOSITORY}:${TAG} over${COLOR_RESET}"
+
+## list-image:	list docker images, can with filter, -f reference="", ref 'docker images --help'
+list-image:
+	@docker images ${IMAGE_LIST_PARAMS}
+	@echo -e "[command-list-image]	${GREEN}list all images, with params:[${IMAGE_LIST_PARAMS}]${COLOR_RESET}"
+
+## list-docker:	list docker container, can with filter, ref 'docker ps --help' or 'docker container ls --help'
+list-docker:
+	@docker ps ${CONTAINER_LIST_PARAMS}
+	@echo -e "[command-list-docker]	${GREEN}list containers with params:[${CONTAINER_LIST_PARAMS}]${COLOR_RESET}"
+
+## run:	docker run with specified params, must set 'CONTAINER_IMAGE', format(image name or id)
+run:
+	@echo -e "[command-run]	${GREEN}run docker, with container image:[${CONTAINER_IMAGE}]${COLOR_RESET}"
+	docker run -it ${CONTAINER_NAME_PARAM} --rm ${CONTAINER_PARAMS} ${CONTAINER_IMAGE} ${CONTAINER_CMD_PARAMS}
+
+## stop:	stop the running containers with container ids
+stop:
+	docker stop ${CONTAINER_ID}
+	@echo -e "[command-stop]	${GREEN}stop container, with container id:[${CONTAINER_ID}]${COLOR_RESET}"
+
+## rmi:	remove the images with image ids
+rmi:
+	docker rmi ${IMAGE_ID}
+	@echo -e "[command-rmi]	${GREEN}remove images :[${IMAGE_ID}]${COLOR_RESET}"
+
+## image-prune:	remove all unused images, ref docker image --help
+image-prune:
+	docker image prune
+	@echo -e "[command-image-prune]	${GREEN}remove all unused images${COLOR_RESET}"
+
+## rm:	remove the containers with container ids
+rm:
+	docker rm ${CONTAIN_ID}
+	@echo -e "[command-rm]	${GREEN}remove containers :[${CONTAIN_ID}]${COLOR_RESET}"
+
+## docker-prune:	remove all stopped containers, ref docker container --help
+docker-prune:
+	docker image prune
+	@echo -e "[command-docker-prune]	${GREEN}remove all stopped containers${COLOR_RESET}"
+
+compose-run:
+	@echo -e "[command-compose-run]	${GREEN}docker-compose run with file:[${DOCKER_COMPOSE_FILE}]${COLOR_RESET}"
+	docker-compose -f ${DOCKER_COMPOSE_FILE} up ${COMPOSE_RUN_PARAMS}
+
+compose-stop:
+	@echo -e "[command-compose-stop]	${GREEN}docker-compose stop with file:[${DOCKER_COMPOSE_FILE}]${COLOR_RESET}"
+	docker-compose -f ${DOCKER_COMPOSE_FILE} stop
+
+logs:
+	docker logs -fn ${LOGS_COUNT} ${CONTAINER_ID}
+	@echo -e "[command-logs]	${GREEN}the latest ${LOGS_COUNT} logs, for container_id:${CONTAINER_ID}${COLOR_RESET}"
+
+compose-logs:
+	docker-compose logs
+	@echo -e "[command-compose-logs]	${GREEN}execute success${COLOR_RESET}"
