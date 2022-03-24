@@ -13,6 +13,7 @@ Makefile and scripts for simply and uni dev-ops, current include go, docker
 
 - **platform** `MacOS/Linux`
 - [bash](https://www.gnu.org/software/bash/) **5.0+**
+- [gnu-getopt](https://formulae.brew.sh/formula/gnu-getopt) *MacOS*
 - [git](https://git-scm.com/) _2.34.1+_
 - [make](https://www.gnu.org/software/make/) _3.81+_
 
@@ -29,7 +30,7 @@ Makefile and scripts for simply and uni dev-ops, current include go, docker
 
 ## quick install
 
-You can easily install by `install.sh`, **but** only support into the `root dir for your project`, default branch `release`.
+You can easily install by `install.sh`, **but** only support into the `root dir of your project`, default branch `release`.
 
 >`release`
 
