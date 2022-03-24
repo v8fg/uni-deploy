@@ -5,7 +5,7 @@ Makefile and scripts for simply and uni dev-ops, current include go, docker
 ## feature
 
 - [x] go
-- [ ] docker
+- [x] docker
 
 ## requirements
 
@@ -50,11 +50,11 @@ You can easily install by `install.sh`, **but** only support into the `root dir 
 >**better clone into your project root dir**
 
 - `git clone https://github.com/v8fg/uni-deploy.git -b <branch> [path]`
-- `bash all.sh`
+- `bash all.sh -h`
 
->more usage: `bash all.sh help`
+>more usage: `bash all.sh -h`
 
 ## uninstall uni-deploy
 
-- `bash uni-deploy/all.sh uninstall`
+- `bash uni-deploy/all.sh -c uninstall`
   - the submodule `uni-deploy` **must in the root dir for your project**
