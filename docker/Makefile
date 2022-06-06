@@ -56,6 +56,8 @@ REGISTRY_ACCOUNT?=
 REGISTRY_PASSWORD?=
 REPOSITORY?=${_default_repository}
 TAG?=${_default_tag}
+# NEW_REPOSITORY format shall like: ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}[-${PUSH_TIME}]
+NEW_REPOSITORY?=
 
 # image id
 IMAGE_ID?=
@@ -110,9 +112,9 @@ ifeq (,$(strip ${TAG}))
 $(warning [init] input param [TAG=], change to [TAG=${TAG}])
 endif
 
-# if set, shall with path, absoulte better
+# if set, shall with path, absolute better
 DOCKER_FILE?=${PROJECT_ROOT}/${_default_docker_file_name}
-# if set, shall with path, absoulte better
+# if set, shall with path, absolute better
 DOCKER_COMPOSE_FILE?=${PROJECT_ROOT}/${_default_docker_compose_file_name}
 
 # check or override: DOCKER_FILE
@@ -127,7 +129,7 @@ ifeq (,$(strip ${DOCKER_COMPOSE_FILE}))
 $(warning [init] input param [DOCKER_COMPOSE_FILE=], change to [DOCKER_COMPOSE_FILE=${DOCKER_COMPOSE_FILE}])
 endif
 
-# full image name: rerpository:tag
+# full image name: repository:tag
 build_image_repository_name=${REPOSITORY}:${TAG}
 
 _git_version=$(shell if [ -x $(command -v git) ]; then git --version | sed -En "s/([^0-9]*)([0-9\.]+)([^0-9]*.*)/\2/ p"; fi)
@@ -160,6 +162,7 @@ endif
 # ----------- Makefile commands -----------
 .PHONY: default help env cp-ignore \
 	login login-auth build tag push list-image list-docker\
+	once-tag once-push \
 	run stop \
 	rmi image-prune rm docker-prune compose-run compose-stop \
 	logs
@@ -187,7 +190,7 @@ login:
 	docker login
 	@echo -e "[command-login]	${GREEN}execute success${COLOR_RESET}"
 
-## login-auth:	login docker-hub or the specied REGISTRY
+## login-auth:	login docker-hub or the special REGISTRY
 login-auth:
 	docker login -u "${REGISTRY_ACCOUNT}" "${REGISTRY}" -p "${REGISTRY_PASSWORD}"
 	@echo -e "[command-login-auth]	${GREEN}execute success${COLOR_RESET}"
@@ -209,6 +212,17 @@ tag:
 push:
 	docker push ${REPOSITORY}:${TAG}
 	@echo -e "[command-push]	${GREEN}push ${REPOSITORY}:${TAG} over${COLOR_RESET}"
+
+## once-tag: docker tag, rename old to the specified tag
+once-tag:
+	@docker tag ${REPOSITORY}:${TAG} ${NEW_REPOSITORY}
+	@echo -e "[command-once-tag]	${GREEN}image [${REPOSITORY}:${TAG} ], rename to [${NEW_REPOSITORY}${COLOR_RESET}]"
+	@echo -e "[command-once-tag]	${GREEN}execute success${COLOR_RESET}"
+
+## once-push:	push docker images with the specified tag to docker hub or others. shall login before push!
+once-push:
+	docker push ${NEW_REPOSITORY}
+	@echo -e "[command-once-push]	${GREEN}push ${NEW_REPOSITORY} over${COLOR_RESET}"
 
 ## list-image:	list docker images, can with filter, -f reference="", ref 'docker images --help'
 list-image:
